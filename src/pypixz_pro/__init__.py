@@ -15,7 +15,10 @@ Basic usage:
 :license: MIT, see LICENSE for more details.
 """
 
-__all__ = []
+__all__ = [
+    "install_requirements",
+    "install_modules"
+]
 
 
 from .__version__ import (
@@ -27,3 +30,5 @@ from .__version__ import (
     __license__,
     __copyright__
 )
+
+from .scripts.install import install_requirements, install_modules
