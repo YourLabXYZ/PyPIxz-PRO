@@ -3,6 +3,7 @@
 """ PyPIxz-PRO 
 Module to manage your dependencies.
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+A fork of PyPixz.
 
 PyPIxz module to manage your dependencies in a simple and efficient way while maintaining guaranteed security.
 Basic usage:
@@ -13,3 +14,16 @@ Basic usage:
 :copyright: (c) 2025 YourLabXYZ.
 :license: MIT, see LICENSE for more details.
 """
+
+__all__ = []
+
+
+from .__version__ import (
+    __title__,
+    __description__,
+    __url__,
+    __version__,
+    __author__,
+    __license__,
+    __copyright__
+)
