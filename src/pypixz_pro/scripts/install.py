@@ -5,67 +5,14 @@ import logging
 import subprocess
 import sys
 
-from .exceptions import (
+from ..exceptions import (
     MissingRequirementsFileError,
     ModuleInstallationError,
     DependencyError
 )
 
 
-def get_installed_packages(logger: str = "main") -> dict:
-    """get_installed_packages Retrieves a dictionary of installed Python packages along with their versions.
-
-    The function executes the `pip freeze` command to obtain a list of installed packages and their respective versions. 
-    It then parses the output, extracting the package names and their versions, and stores them in a dictionary where the keys are package names in lowercase, 
-    and the values are the corresponding versions.
-
-    Returns:
-        dict -- A dictionary containing installed package names as keys (in lowercase) and their corresponding versions as values.
-    """
-    
-    installed_packages = {}
-    
-    try:
-        result = subprocess.run(
-            [sys.executable, "-m", "pip", "freeze"],
-            check=True,  # Raises CalledProcessError if the command fails
-            capture_output=True,  # Captures stdout and stderr for debugging/logging
-            text=True  # Decodes stdout/stderr as text
-        )
-    except subprocess.CalledProcessError as error:
-        raise ModuleInstallationError(logger.error(f"An error occurred while installing dependencies:\n{error.stderr or 'Unknown error'}"))
-
-    for line in result.stdout.split("\n"):
-        if "==" in line:
-            name, version = line.split("==")
-            installed_packages[name.lower()] = version
-    return installed_packages
-
-
-def is_package_installed(package_line: str, installed_packages: dict[str, str]) -> bool:
-    """is_package_installed Check if a package is installed in the given list of installed packages.
-
-    This function determines whether a provided package from a package_line is installed by checking the installed_packages dictionary. 
-    It accounts for both specific version requirements and general presence of the package.
-
-    Arguments:
-        package_line {str} -- A string representing the package, potentially including a required version, e.g., "package_name==1.0.0".
-        installed_packages {dict[str, str]} -- A dictionary representing the currently installed packages. 
-                                               Keys are lowercase package names and
-                                               values are their installed versions.
-
-    Returns:
-        bool -- True if the package is installed with required version (if specified), or if the package is found installed without-version specification. 
-                False otherwise.
-    """
-    
-    if "==" in package_line:
-        name, required_version = package_line.split("==")
-        return installed_packages.get(name.lower() == required_version)
-    return package_line.lower() in installed_packages
-
-
-def install_requirements(path: str = "requirements", logger: str = "main"):
+def install_requirements(path: str = "requirements.txt", logger: str = "main"):
     """install_requirements Install required Python packages from a requirements file.
 
     This function enables the installation of Python package dependencies defined in a requirements file. 
@@ -91,28 +38,9 @@ def install_requirements(path: str = "requirements", logger: str = "main"):
         raise MissingRequirementsFileError(logger.error(f"The {path} file was not found."))
     
     try:
-        # Preloading existing packages to avoid installing duplicates
-        existing_packages = get_installed_packages(logger)
-        
-        with open(absolute_path, "r", encoding="utf-8") as file:
-            required_packages = [line.strip() for line in file.readline() if line.strip()]
-        
-        # Filter packages that require installation
-        packages_to_install = [
-            package for package in required_packages if not is_package_installed(package, existing_packages)
-        ]
-        
-        if not packages_to_install:
-            logger.info("All dependencies are already installed.")
-            
-        # Build pip command
-        command = [
-            sys.executable, "-m", "pip", "install", "--no-cache-dir", "--no-deps",
-            *packages_to_install
-        ]
-        
+        # Run the pip install -r requirements.txt command
         result = subprocess.run(
-            command,
+            [sys.executable, "-m", "pip", "install", "-r", absolute_path],
             check=True,  # Raises CalledProcessError if the command fails
             capture_output=True,  # Captures stdout and stderr for debugging/logging
             text=True  # Decodes stdout/stderr as text
